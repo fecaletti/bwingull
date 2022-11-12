@@ -1,19 +1,26 @@
 #ifndef ROTA_H
 #define ROTA_H
 
-#include "src/ponto/ponto.h"
+#include "../ponto/ponto.h"
+#include "../registro-base/registro-base.h"
+#include <iostream>
+#include <sstream>
+#include <ostream>
 #include <stdio.h>
 #include <vector>
+#include <string>
 
 using namespace std;
 
-class Rota
+class Rota: public RegistroBase
 {
     private:
-        vector<Ponto>* pontos;
+        vector<Ponto>* Pontos;
+        string Descricao;
 
     public:
-        Rota();
+        Rota(int id);
+        string toString();
 };
 
 #endif

@@ -1,15 +1,17 @@
 #ifndef PONTO_H
 #define PONTO_H
 
-class Ponto
+#include "../registro-base/registro-base.h"
+
+class Ponto : public RegistroBase
 {
     private:
         double x;
         double y;
     
     public:
-        Ponto(double x, double y);
-        Ponto();
+        Ponto(int id, double x, double y);
+        Ponto(int id);
         double getX();
         double getY();
 };
