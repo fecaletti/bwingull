@@ -1,5 +1,10 @@
-// wxWidgets "Hello World" Program
-// For compilers that support precompilation, includes "wx/wx.h".
+//Universidade Estadual do Rio Grande do Sul
+//Trabalho final da disciplina de Programação Orientada a Objetos
+//Grupo 4 - Estudantes:
+//André Hartwig
+//Fernando Augusto Caletti de Barros
+//Leonardo
+//Vanderson
 #include <wx/wxprec.h>
 #include <wx/wx.h>
 #include <wx/frame.h>
@@ -11,8 +16,6 @@
 #include "src/rota/rota.h"
 
 using namespace std;
-
-
 
 class MyApp : public wxApp
 {
@@ -27,6 +30,7 @@ class MyFrame : public wxFrame
         void AddBtnCallback(wxCommandEvent& event);
         void RemoveBtnCallback(wxCommandEvent& event);
         void PushToRouteList();
+        void Log(ostringstream stream);
         DECLARE_EVENT_TABLE()
 
     private:
@@ -34,15 +38,15 @@ class MyFrame : public wxFrame
         void OnExit(wxCommandEvent& event);
         void OnAbout(wxCommandEvent& event);
         
-        wxTextCtrl *logTxtCtrl;
-        wxListBox *routeListBox;
-        wxButton *addBtn;
-        wxButton *removeBtn;
-        wxButton *updateBtn;
-        wxButton *openInBrowserBtn;
+        wxTextCtrl *LogTxtCtrl;
+        wxListBox *RouteListBox;
+        wxButton *AddBtn;
+        wxButton *RemoveBtn;
+        wxButton *UpdateBtn;
+        wxButton *OpenInBrowserBtn;
 
-        vector<Rota*>* rotas;
-        int idAtualRotas = 1;
+        vector<Rota*>* Rotas;
+        int IdAtualRotas = 1;
 };
 
 enum
@@ -74,7 +78,7 @@ END_EVENT_TABLE() // The button is pressed
 MyFrame::MyFrame()
     : wxFrame(nullptr, wxID_ANY, "Gerenciador de Rotas UERGS - POO 2022/2", wxDefaultPosition, wxSize(500, 500))
 {
-    this->rotas = new vector<Rota*>();
+    this->Rotas = new vector<Rota*>();
 
     wxMenu *menuFile = new wxMenu();
     menuFile->Append(ID_Hello, "&Hello...\tCtrl-H", "Help string shown in status bar for this menu item");
@@ -97,37 +101,37 @@ MyFrame::MyFrame()
     Bind(wxEVT_MENU, &MyFrame::OnAbout, this, wxID_ABOUT);
     Bind(wxEVT_MENU, &MyFrame::OnExit, this, wxID_EXIT);
 
-    routeListBox = new wxListBox(this, ID_ROUTE_LIST_BOX, wxPoint(250, 10), wxSize(240, 200));
+    RouteListBox = new wxListBox(this, ID_ROUTE_LIST_BOX, wxPoint(250, 10), wxSize(240, 200));
 
-        logTxtCtrl = new wxTextCtrl(this, ID_LOG_TEXT_CONTROLLER,
+        LogTxtCtrl = new wxTextCtrl(this, ID_LOG_TEXT_CONTROLLER,
       wxT(""), wxPoint(250, 220), wxSize(240, 200),
       wxTE_MULTILINE | wxTE_RICH | wxTE_READONLY, wxDefaultValidator, wxTextCtrlNameStr);
     
-    addBtn = new wxButton(this, ID_ADD_BTN, wxT("ADD"), wxPoint(30, 40), wxDefaultSize, 0);
-    updateBtn = new wxButton(this, ID_UPDATE_BTN, wxT("UPDATE"), wxPoint(30, 70), wxDefaultSize, 0);
-    removeBtn = new wxButton(this, ID_REMOVE_BTN, wxT("REMOVE"), wxPoint(30, 100), wxDefaultSize, 0);
-    openInBrowserBtn = new wxButton(this, ID_OPEN_IN_BROWSER_BTN, wxT("BROWSE"), wxPoint(30, 130), wxDefaultSize, 0);
+    AddBtn = new wxButton(this, ID_ADD_BTN, wxT("ADD"), wxPoint(30, 40), wxDefaultSize, 0);
+    UpdateBtn = new wxButton(this, ID_UPDATE_BTN, wxT("UPDATE"), wxPoint(30, 70), wxDefaultSize, 0);
+    RemoveBtn = new wxButton(this, ID_REMOVE_BTN, wxT("REMOVE"), wxPoint(30, 100), wxDefaultSize, 0);
+    OpenInBrowserBtn = new wxButton(this, ID_OPEN_IN_BROWSER_BTN, wxT("BROWSE"), wxPoint(30, 130), wxDefaultSize, 0);
 }
 
 void MyFrame :: AddBtnCallback(wxCommandEvent& event)
 {
     ostringstream strBuff;
-    strBuff << "\nAdicionando rota - id: " << this->idAtualRotas;
-    this->logTxtCtrl->AppendText(strBuff.str());
-    this->rotas->push_back(new Rota(this->idAtualRotas++));
+    strBuff << "\nAdicionando rota - id: " << this->IdAtualRotas;
+    this->LogTxtCtrl->AppendText(strBuff.str());
+    this->Rotas->push_back(new Rota(this->IdAtualRotas++));
     PushToRouteList();
 }
 
 void MyFrame :: RemoveBtnCallback(wxCommandEvent& event)
 {
     wxArrayInt selectedIndexes;
-    int numberOfSelections = this->routeListBox->GetSelections(selectedIndexes);
+    int numberOfSelections = this->RouteListBox->GetSelections(selectedIndexes);
     for (int i = 0; i < numberOfSelections; i++)
     {
         ostringstream strBuff;
-        strBuff << "\nRemovendo rota " << this->rotas->at(selectedIndexes[i])->GetId();
-        this->logTxtCtrl->AppendText(strBuff.str());
-        this->rotas->erase(this->rotas->begin() + (int)selectedIndexes[i]);
+        strBuff << "\nRemovendo rota " << this->Rotas->at(selectedIndexes[i])->GetId();
+        this->LogTxtCtrl->AppendText(strBuff.str());
+        this->Rotas->erase(this->Rotas->begin() + (int)selectedIndexes[i]);
     }
     this->PushToRouteList();
 }
@@ -149,14 +153,19 @@ void MyFrame::OnHello(wxCommandEvent& event)
 
 void MyFrame :: PushToRouteList()
 {
-    wxString* stringData = new wxString[this->rotas->size()];
-    for (int i = 0; i < this->rotas->size(); i++)
+    wxString* stringData = new wxString[this->Rotas->size()];
+    for (int i = 0; i < this->Rotas->size(); i++)
     {
-        stringData[i] = this->rotas->at(i)->toString();
+        stringData[i] = this->Rotas->at(i)->toString();
     }
     
-    this->routeListBox->Clear();
+    this->RouteListBox->Clear();
 
-    if(this->rotas->size() > 0)
-        this->routeListBox->InsertItems(this->rotas->size(), stringData, 0);
+    if(this->Rotas->size() > 0)
+        this->RouteListBox->InsertItems(this->Rotas->size(), stringData, 0);
+}
+
+void MyFrame :: Log(ostringstream stream)
+{
+    this->LogTxtCtrl->AppendText(stream.str());
 }
