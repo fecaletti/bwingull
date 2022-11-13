@@ -10,12 +10,12 @@
 #include <wx/frame.h>
 #include <wx/listbox.h>
 #include <wx/textentry.h>
+#include <wx/stattext.h>
 
 #include <stdio.h>
 #include <vector>
 
 #include "../../lib/rota/rota.h"
-#include "../../lib/text-controller-logger/text-controller-logger.h"
 
 using namespace std;
 
@@ -31,7 +31,6 @@ class RotaFormFrame : public wxFrame
         DECLARE_EVENT_TABLE()
 
     private:
-        TextControllerLogger* Logger;
         void OnHello(wxCommandEvent& event);
         void OnExit(wxCommandEvent& event);
         void OnAbout(wxCommandEvent& event);
@@ -44,11 +43,11 @@ class RotaFormFrame : public wxFrame
         wxButton *AdicionaPontoBtn;
         wxButton *RemovePontoBtn;
 
-        wxTextEntry *rotaDescTxt;
-        wxTextEntry *xCoordTxt;
-        wxTextEntry *yCoordTxt;
+        wxTextCtrl *RotaDescTxt;
+        wxTextCtrl *XCoordTxt;
+        wxTextCtrl *YCoordTxt;
 
-        Rota* novaRota;
+        Rota* NovaRota;
         int IdAtualPonto = 0;
 };
 
@@ -63,19 +62,23 @@ enum
     ID_RF_PONTOS_LIST_BOX = 27,
     ID_RF_ROTA_DESC_TXT = 28,
     ID_RF_PONTO_X_TXT = 29,
-    ID_RF_PONTO_Y_TXT = 30
+    ID_RF_PONTO_Y_TXT = 30,
+    ID_RF_ROTA_DESC_LBL = 31,
+    ID_RF_PONTO_LBL = 32
 };
 
 BEGIN_EVENT_TABLE ( RotaFormFrame, wxFrame )
-    EVT_BUTTON ( ID_RF_ADD_BTN, RotaFormFrame::AddBtnCallback ) // Tell the OS to run test method onclick btn 189
-    EVT_BUTTON ( ID_RF_REMOVE_BTN, RotaFormFrame::RemoveBtnCallback ) // Tell the OS to run test method onclick btn 190
+    EVT_BUTTON ( ID_RF_ADD_PONTO_BTN, RotaFormFrame::AdicionaPontoBtnCallback ) // Tell the OS to run test method onclick btn 189
+    EVT_BUTTON ( ID_RF_REMOVE_PONTO_BTN, RotaFormFrame::RemovePontoBtnCallback ) // Tell the OS to run test method onclick btn 190
+    EVT_BUTTON ( ID_RF_SALVAR_BTN, RotaFormFrame::SalvarBtnCallback ) // Tell the OS to run test method onclick btn 190
+    EVT_BUTTON ( ID_RF_CANCELAR_BTN, RotaFormFrame::CancelarBtnCallback ) // Tell the OS to run test method onclick btn 190
 END_EVENT_TABLE() // The button is pressed
 
 
 RotaFormFrame::RotaFormFrame(Rota* novaRota)
     : wxFrame(nullptr, wxID_ANY, "Cadastro de nova rota", wxDefaultPosition, wxSize(500, 500))
 {
-    this->novaRota = novaRota;
+    this->NovaRota = novaRota;
 
     wxMenu *menuFile = new wxMenu();
     menuFile->Append(ID_RF_Hello, "&Hello...\tCtrl-H", "Help string shown in status bar for this menu item");
@@ -98,26 +101,35 @@ RotaFormFrame::RotaFormFrame(Rota* novaRota)
     Bind(wxEVT_MENU, &RotaFormFrame::OnAbout, this, wxID_ABOUT);
     Bind(wxEVT_MENU, &RotaFormFrame::OnExit, this, wxID_EXIT);
 
-    RouteListBox = new wxListBox(this, ID_RF_ROUTE_LIST_BOX, wxPoint(250, 10), wxSize(240, 200));
+    PontosListBox = new wxListBox(this, ID_RF_PONTOS_LIST_BOX, wxPoint(250, 10), wxSize(240, 200));
 
-        LogTxtCtrl = new wxTextCtrl(this, ID_RF_LOG_TEXT_CONTROLLER,
-      wxT("nova rota sendo cadastrada!"), wxPoint(250, 220), wxSize(240, 200),
+    LogTxtCtrl = new wxTextCtrl(this, ID_RF_LOG_TEXT_CONTROLLER,
+      wxT(""), wxPoint(250, 220), wxSize(240, 200),
       wxTE_MULTILINE | wxTE_RICH | wxTE_READONLY, wxDefaultValidator, wxTextCtrlNameStr);
 
-    Logger = new TextControllerLogger(LogTxtCtrl);
+
+    wxStaticText* novoPontoLbl = new wxStaticText(this, ID_RF_PONTO_LBL, wxString("Adicionar ponto"), wxPoint(10, 155));
+    AdicionaPontoBtn = new wxButton(this, ID_RF_ADD_PONTO_BTN, wxT("Adicionar Ponto"), wxPoint(10, 210), wxDefaultSize, 0);
+    RemovePontoBtn = new wxButton(this, ID_RF_REMOVE_PONTO_BTN, wxT("Remover Ponto"), wxPoint(10, 240), wxDefaultSize, 0);
+    SalvarBtn = new wxButton(this, ID_RF_SALVAR_BTN, wxT("Salvar"), wxPoint(10, 400), wxDefaultSize, 0);
+    CancelarBtn = new wxButton(this, ID_RF_CANCELAR_BTN, wxT("Cancelar"), wxPoint(110, 400), wxDefaultSize, 0);
+
+    wxStaticText* descRotaLbl = new wxStaticText(this, ID_RF_ROTA_DESC_LBL, wxString("Descrição da rota"), wxPoint(10, 15));
+    RotaDescTxt = new wxTextCtrl(this, ID_RF_ROTA_DESC_TXT, wxT("Descrição"), wxPoint(10, 40), wxSize(180, 25));
+    XCoordTxt = new wxTextCtrl(this, ID_RF_PONTO_X_TXT, wxT("X"), wxPoint(10, 180), wxSize(60, 25));
+    YCoordTxt = new wxTextCtrl(this, ID_RF_PONTO_Y_TXT, wxT("Y"), wxPoint(80, 180), wxSize(60, 25));
 }
 
-void RotaFormFrame :: AddBtnCallback(wxCommandEvent& event)
+void RotaFormFrame :: AdicionaPontoBtnCallback(wxCommandEvent& event)
 {
     // ostringstream strBuff;
     // strBuff << "\nAdicionando ponto - id: " << this->IdAtualPonto;
     // this->LogTxtCtrl->AppendText(strBuff.str());
     // this->Rotas->push_back(new Rota(this->IdAtualRotas++));
     // PushToRouteList();
-    this->Logger << "ISSO EH UM LOG DE TESTE";
 }
 
-void RotaFormFrame :: RemoveBtnCallback(wxCommandEvent& event)
+void RotaFormFrame :: RemovePontoBtnCallback(wxCommandEvent& event)
 {
     // wxArrayInt selectedIndexes;
     // int numberOfSelections = this->RouteListBox->GetSelections(selectedIndexes);
@@ -129,6 +141,16 @@ void RotaFormFrame :: RemoveBtnCallback(wxCommandEvent& event)
     //     this->Rotas->erase(this->Rotas->begin() + (int)selectedIndexes[i]);
     // }
     // this->PushToRouteList();
+}
+
+void RotaFormFrame :: SalvarBtnCallback(wxCommandEvent& event)
+{
+
+}
+
+void RotaFormFrame :: CancelarBtnCallback(wxCommandEvent& event)
+{
+
 }
 
 void RotaFormFrame :: OnExit(wxCommandEvent& event)
@@ -146,21 +168,16 @@ void RotaFormFrame :: OnHello(wxCommandEvent& event)
     wxLogMessage("Hello world from wxWidgets - teste!");
 }
 
-void RotaFormFrame :: PushToRouteList()
+void RotaFormFrame :: ImprimirListaPontos()
 {
-    // wxString* stringData = new wxString[this->Rotas->size()];
-    // for (int i = 0; i < this->Rotas->size(); i++)
-    // {
-    //     stringData[i] = this->Rotas->at(i)->toString();
-    // }
+    wxString* stringData = new wxString[this->NovaRota->Pontos->size()];
+    for (int i = 0; i < this->NovaRota->Pontos->size(); i++)
+    {
+        stringData[i] = this->NovaRota->Pontos->at(i)->toString();
+    }
     
-    // this->RouteListBox->Clear();
+    this->PontosListBox->Clear();
 
-    // if(this->Rotas->size() > 0)
-    //     this->RouteListBox->InsertItems(this->Rotas->size(), stringData, 0);
-}
-
-void RotaFormFrame :: Log(ostringstream stream)
-{
-    // this->LogTxtCtrl->AppendText(stream.str());
+    if(this->NovaRota->Pontos->size() > 0)
+        this->PontosListBox->InsertItems(this->NovaRota->Pontos->size(), stringData, 0);
 }

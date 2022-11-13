@@ -15,12 +15,12 @@ using namespace std;
 class Rota: public RegistroBase
 {
     private:
-        vector<Ponto>* Pontos;
         string Descricao;
 
     public:
         Rota(int id);
         string toString();
+        vector<Ponto*>* Pontos;
 };
 
 #endif

@@ -2,7 +2,7 @@
 
 Rota :: Rota(int id) : RegistroBase(id)
 {
-    this->Pontos = new vector<Ponto>();
+    this->Pontos = new vector<Ponto*>();
 }
 
 string Rota :: toString()
