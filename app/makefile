@@ -12,7 +12,9 @@ TARGET = main
 all: $(TARGET)
 
 $(TARGET): $(TARGET).cpp
-			$(CC) $(CFLAGS) -o $(TARGET).outm $(TARGET).cpp src/ponto/ponto.cpp src/rota/rota.cpp
+			$(CC) $(CFLAGS) -o $(TARGET).outm $(TARGET).cpp src/lib/ponto/ponto.cpp src/lib/rota/rota.cpp src/lib/text-controller-logger/text-controller-logger.cpp
 
 clean:
 			$(RM) $(TARGET)
+
+#src/frames/rota-form-frame/rota-form-frame.cpp

@@ -26,17 +26,17 @@
         {
             "type": "cppbuild",
             "label": "Build app",
-            "command": "/usr/bin/g++",
+            "command": "make",
             "args": [
-                "${file}",
-                "`wx-config",
-                "--cxxflags",
-                "--libs`",
-                "-o",
-                "${fileDirname}/${fileBasenameNoExtension}.out"
+                // "${file}",
+                // "`wx-config",
+                // "--cxxflags",
+                // "--libs`",
+                // "-o",
+                // "${fileDirname}/${fileBasenameNoExtension}.out"
             ],
             "options": {
-                "cwd": "${fileDirname}"
+                "cwd": "${workspaceFolder}/app"
             },
             "problemMatcher": [
                 "$gcc"
@@ -50,7 +50,7 @@
         {
             "type": "shell",
             "label": "Run app",
-            "command": "${fileDirname}/${fileBasenameNoExtension}.out",
+            "command": "${workspaceFolder}/app/main.outm",
             "args": [ 
             ],
             "options": {

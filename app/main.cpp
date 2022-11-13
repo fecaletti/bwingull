@@ -13,7 +13,8 @@
 #include <stdio.h>
 #include <vector>
 
-#include "src/rota/rota.h"
+#include "src/lib/rota/rota.h"
+#include "src/frames/rota-form-frame/rota-form-frame.cpp"
 
 using namespace std;
 
@@ -29,6 +30,7 @@ class MyFrame : public wxFrame
         MyFrame();
         void AddBtnCallback(wxCommandEvent& event);
         void RemoveBtnCallback(wxCommandEvent& event);
+        void BrowseBtnCallback(wxCommandEvent& event);
         void PushToRouteList();
         void Log(ostringstream stream);
         DECLARE_EVENT_TABLE()
@@ -47,6 +49,8 @@ class MyFrame : public wxFrame
 
         vector<Rota*>* Rotas;
         int IdAtualRotas = 1;
+
+        RotaFormFrame* rotaForm;
 };
 
 enum
@@ -72,6 +76,7 @@ bool MyApp::OnInit()
 BEGIN_EVENT_TABLE ( MyFrame, wxFrame )
     EVT_BUTTON ( ID_ADD_BTN, MyFrame::AddBtnCallback ) // Tell the OS to run test method onclick btn 189
     EVT_BUTTON ( ID_REMOVE_BTN, MyFrame::RemoveBtnCallback ) // Tell the OS to run test method onclick btn 190
+    EVT_BUTTON ( ID_OPEN_IN_BROWSER_BTN, MyFrame::BrowseBtnCallback ) // Tell the OS to run test method onclick btn 190
 END_EVENT_TABLE() // The button is pressed
 
 
@@ -134,6 +139,13 @@ void MyFrame :: RemoveBtnCallback(wxCommandEvent& event)
         this->Rotas->erase(this->Rotas->begin() + (int)selectedIndexes[i]);
     }
     this->PushToRouteList();
+}
+
+void MyFrame :: BrowseBtnCallback(wxCommandEvent& event)
+{
+    this->Rotas->push_back(new Rota(this->IdAtualRotas++));
+    this->rotaForm = new RotaFormFrame(this->Rotas->at(this->Rotas->size() - 1));
+    this->rotaForm->Show();
 }
 
 void MyFrame::OnExit(wxCommandEvent& event)
