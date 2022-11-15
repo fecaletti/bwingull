@@ -32,13 +32,14 @@ class MyFrame : public wxFrame
         void RemoveBtnCallback(wxCommandEvent& event);
         void BrowseBtnCallback(wxCommandEvent& event);
         void PushToRouteList();
-        void Log(ostringstream stream);
+
         DECLARE_EVENT_TABLE()
 
     private:
         void OnHello(wxCommandEvent& event);
         void OnExit(wxCommandEvent& event);
         void OnAbout(wxCommandEvent& event);
+        void OnCloseFormWindow(wxCloseEvent& event);
         
         wxTextCtrl *LogTxtCtrl;
         wxListBox *RouteListBox;
@@ -141,11 +142,24 @@ void MyFrame :: RemoveBtnCallback(wxCommandEvent& event)
     this->PushToRouteList();
 }
 
+bool tonclose(bool flag, int data)
+{
+    cout << "teste binding external -- " << flag << " - " << data << endl;
+    return true;
+}
+
 void MyFrame :: BrowseBtnCallback(wxCommandEvent& event)
 {
     this->Rotas->push_back(new Rota(this->IdAtualRotas++));
-    this->rotaForm = new RotaFormFrame(this->Rotas->at(this->Rotas->size() - 1));
+    this->rotaForm = new RotaFormFrame(this->Rotas->at(this->Rotas->size() - 1), &tonclose);
     this->rotaForm->Show();
+
+    //Bind(wxEVT_CLOSE_WINDOW, &MyFrame::OnCloseFormWindow, this);
+}
+
+void MyFrame :: OnCloseFormWindow(wxCloseEvent& event)
+{
+    cout << "Closed route form!!" << endl;
 }
 
 void MyFrame::OnExit(wxCommandEvent& event)
@@ -175,9 +189,4 @@ void MyFrame :: PushToRouteList()
 
     if(this->Rotas->size() > 0)
         this->RouteListBox->InsertItems(this->Rotas->size(), stringData, 0);
-}
-
-void MyFrame :: Log(ostringstream stream)
-{
-    this->LogTxtCtrl->AppendText(stream.str());
 }

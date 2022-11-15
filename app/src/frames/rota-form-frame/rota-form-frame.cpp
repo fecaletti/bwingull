@@ -22,7 +22,7 @@ using namespace std;
 class RotaFormFrame : public wxFrame
 {
     public:
-        RotaFormFrame(Rota* novaRota);
+        RotaFormFrame(Rota* novaRota, bool onClose(bool, int));
         void AdicionaPontoBtnCallback(wxCommandEvent& event);
         void RemovePontoBtnCallback(wxCommandEvent& event);
         void SalvarBtnCallback(wxCommandEvent& event);
@@ -34,6 +34,7 @@ class RotaFormFrame : public wxFrame
         void OnHello(wxCommandEvent& event);
         void OnExit(wxCommandEvent& event);
         void OnAbout(wxCommandEvent& event);
+        void OnClose(wxCloseEvent& event);
         
         wxTextCtrl *LogTxtCtrl;
         wxListBox *PontosListBox;
@@ -49,6 +50,8 @@ class RotaFormFrame : public wxFrame
 
         Rota* NovaRota;
         int IdAtualPonto = 0;
+
+        bool (*delegate)(bool, int);
 };
 
 enum
@@ -64,7 +67,9 @@ enum
     ID_RF_PONTO_X_TXT = 29,
     ID_RF_PONTO_Y_TXT = 30,
     ID_RF_ROTA_DESC_LBL = 31,
-    ID_RF_PONTO_LBL = 32
+    ID_RF_PONTO_LBL = 32,
+    ID_RF_PONTO_X_LBL = 33,
+    ID_RF_PONTO_Y_LBL = 34
 };
 
 BEGIN_EVENT_TABLE ( RotaFormFrame, wxFrame )
@@ -75,10 +80,11 @@ BEGIN_EVENT_TABLE ( RotaFormFrame, wxFrame )
 END_EVENT_TABLE() // The button is pressed
 
 
-RotaFormFrame::RotaFormFrame(Rota* novaRota)
+RotaFormFrame::RotaFormFrame(Rota* novaRota, bool (*onClose)(bool, int))
     : wxFrame(nullptr, wxID_ANY, "Cadastro de nova rota", wxDefaultPosition, wxSize(500, 500))
 {
     this->NovaRota = novaRota;
+    this->delegate = onClose;
 
     wxMenu *menuFile = new wxMenu();
     menuFile->Append(ID_RF_Hello, "&Hello...\tCtrl-H", "Help string shown in status bar for this menu item");
@@ -108,16 +114,20 @@ RotaFormFrame::RotaFormFrame(Rota* novaRota)
       wxTE_MULTILINE | wxTE_RICH | wxTE_READONLY, wxDefaultValidator, wxTextCtrlNameStr);
 
 
-    wxStaticText* novoPontoLbl = new wxStaticText(this, ID_RF_PONTO_LBL, wxString("Adicionar ponto"), wxPoint(10, 155));
-    AdicionaPontoBtn = new wxButton(this, ID_RF_ADD_PONTO_BTN, wxT("Adicionar Ponto"), wxPoint(10, 210), wxDefaultSize, 0);
-    RemovePontoBtn = new wxButton(this, ID_RF_REMOVE_PONTO_BTN, wxT("Remover Ponto"), wxPoint(10, 240), wxDefaultSize, 0);
+    wxStaticText* novoPontoLbl = new wxStaticText(this, ID_RF_PONTO_LBL, wxString("Adicionar ponto"), wxPoint(10, 135));
+    wxStaticText* xLbl = new wxStaticText(this, ID_RF_PONTO_X_LBL, wxString("X"), wxPoint(10, 160));
+    wxStaticText* yLbl = new wxStaticText(this, ID_RF_PONTO_Y_LBL, wxString("Y"), wxPoint(85, 160));
+    AdicionaPontoBtn = new wxButton(this, ID_RF_ADD_PONTO_BTN, wxT("Adicionar Ponto"), wxPoint(10, 215), wxDefaultSize, 0);
+    RemovePontoBtn = new wxButton(this, ID_RF_REMOVE_PONTO_BTN, wxT("Remover Ponto"), wxPoint(10, 245), wxDefaultSize, 0);
     SalvarBtn = new wxButton(this, ID_RF_SALVAR_BTN, wxT("Salvar"), wxPoint(10, 400), wxDefaultSize, 0);
     CancelarBtn = new wxButton(this, ID_RF_CANCELAR_BTN, wxT("Cancelar"), wxPoint(110, 400), wxDefaultSize, 0);
 
     wxStaticText* descRotaLbl = new wxStaticText(this, ID_RF_ROTA_DESC_LBL, wxString("Descrição da rota"), wxPoint(10, 15));
     RotaDescTxt = new wxTextCtrl(this, ID_RF_ROTA_DESC_TXT, wxT("Descrição"), wxPoint(10, 40), wxSize(180, 25));
-    XCoordTxt = new wxTextCtrl(this, ID_RF_PONTO_X_TXT, wxT("X"), wxPoint(10, 180), wxSize(60, 25));
-    YCoordTxt = new wxTextCtrl(this, ID_RF_PONTO_Y_TXT, wxT("Y"), wxPoint(80, 180), wxSize(60, 25));
+    XCoordTxt = new wxTextCtrl(this, ID_RF_PONTO_X_TXT, wxT(""), wxPoint(10, 180), wxSize(60, 25), wxTB_DEFAULT_STYLE, wxTextValidator(wxFILTER_NUMERIC));
+    YCoordTxt = new wxTextCtrl(this, ID_RF_PONTO_Y_TXT, wxT(""), wxPoint(80, 180), wxSize(60, 25), wxTB_DEFAULT_STYLE, wxTextValidator(wxFILTER_NUMERIC));
+
+    Bind(wxEVT_CLOSE_WINDOW, &RotaFormFrame::OnClose, this);
 }
 
 void RotaFormFrame :: AdicionaPontoBtnCallback(wxCommandEvent& event)
@@ -145,12 +155,12 @@ void RotaFormFrame :: RemovePontoBtnCallback(wxCommandEvent& event)
 
 void RotaFormFrame :: SalvarBtnCallback(wxCommandEvent& event)
 {
-
+    this->Close();
 }
 
 void RotaFormFrame :: CancelarBtnCallback(wxCommandEvent& event)
 {
-
+    this->Close();
 }
 
 void RotaFormFrame :: OnExit(wxCommandEvent& event)
@@ -166,6 +176,16 @@ void RotaFormFrame :: OnAbout(wxCommandEvent& event)
 void RotaFormFrame :: OnHello(wxCommandEvent& event)
 {
     wxLogMessage("Hello world from wxWidgets - teste!");
+}
+
+void RotaFormFrame :: OnClose(wxCloseEvent& event)
+{
+    bool parentResult = this->delegate(true, 0);
+
+    if(parentResult)
+        this->Destroy();
+    else
+        cout << "Could not close due to parent bad result." << endl;
 }
 
 void RotaFormFrame :: ImprimirListaPontos()
