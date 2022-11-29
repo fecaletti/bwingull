@@ -20,9 +20,10 @@ class Ponto : public RegistroBase
     public:
         Ponto(int id, int numero, double x, double y);
         Ponto(int id, int numero = 0);
-        double getX();
-        double getY();
-        string toString();
+        double GetX();
+        double GetY();
+        int GetNumero();
+        string ToString();
 };
 
 #endif

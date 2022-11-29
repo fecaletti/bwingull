@@ -14,19 +14,24 @@ Ponto :: Ponto(int id, int numero) : RegistroBase(id)
     this->numero = numero;
 }
 
-double Ponto :: getX()
+double Ponto :: GetX()
 {
     return this->x;
 }
 
-double Ponto :: getY()
+double Ponto :: GetY()
 {
     return this->y;
 }
 
-string Ponto :: toString()
+string Ponto :: ToString()
 {
     ostringstream strBuf;
-    strBuf << "Ponto " << this->numero << " - X: " << this->getX() << " - Y: " << this->getY();
+    strBuf << "Ponto " << this->numero << " - X: " << this->GetX() << " - Y: " << this->GetY();
     return strBuf.str();
+}
+
+int Ponto :: GetNumero()
+{
+    return this->numero;
 }

@@ -5,6 +5,9 @@
 //Fernando Augusto Caletti de Barros
 //Leonardo
 //Vanderson
+// #ifndef MAIN_BWINGULL_CPP
+// #define MAIN_BWINGULL_CPP
+
 #include <wx/wxprec.h>
 #include <wx/wx.h>
 #include <wx/frame.h>
@@ -17,6 +20,8 @@
 #include "src/frames/rota-form-frame/rota-form-frame.cpp"
 
 using namespace std;
+
+#define INTERVALO_ATUALIZACAO_TELA 300 //ms
 
 class MyApp : public wxApp
 {
@@ -32,6 +37,11 @@ class MyFrame : public wxFrame
         void RemoveBtnCallback(wxCommandEvent& event);
         void BrowseBtnCallback(wxCommandEvent& event);
         void PushToRouteList();
+        void AtualizaTelaEvent(wxTimerEvent& event);
+        mutex* ListaRotasMutex;
+        vector<Rota*>* Rotas = new vector<Rota*>();
+        int IdAtualRotas = 1;
+        bool DeveAtualizarTela = false;
 
         DECLARE_EVENT_TABLE()
 
@@ -40,6 +50,7 @@ class MyFrame : public wxFrame
         void OnExit(wxCommandEvent& event);
         void OnAbout(wxCommandEvent& event);
         void OnCloseFormWindow(wxCloseEvent& event);
+        // void UpdateRouteVisualizationTask();
         
         wxTextCtrl *LogTxtCtrl;
         wxListBox *RouteListBox;
@@ -48,10 +59,10 @@ class MyFrame : public wxFrame
         wxButton *UpdateBtn;
         wxButton *OpenInBrowserBtn;
 
-        vector<Rota*>* Rotas;
-        int IdAtualRotas = 1;
+        vector<Rota*>* UltimasRotasRenderizadas;
 
         RotaFormFrame* rotaForm;
+        wxTimer AtualizaTelaTimer;
 };
 
 enum
@@ -64,6 +75,8 @@ enum
     ID_LOG_TEXT_CONTROLLER = 6,
     ID_ROUTE_LIST_BOX = 7
 };
+
+// void UpdateRouteVisualizationTask(MyFrame& frameObject);
 
 wxIMPLEMENT_APP(MyApp);
 
@@ -81,10 +94,15 @@ BEGIN_EVENT_TABLE ( MyFrame, wxFrame )
 END_EVENT_TABLE() // The button is pressed
 
 
+void testeFunc()
+{
+
+}
+
 MyFrame::MyFrame()
     : wxFrame(nullptr, wxID_ANY, "Gerenciador de Rotas UERGS - POO 2022/2", wxDefaultPosition, wxSize(500, 500))
 {
-    this->Rotas = new vector<Rota*>();
+    //Rotas = new vector<Rota*>();
 
     wxMenu *menuFile = new wxMenu();
     menuFile->Append(ID_Hello, "&Hello...\tCtrl-H", "Help string shown in status bar for this menu item");
@@ -117,15 +135,33 @@ MyFrame::MyFrame()
     UpdateBtn = new wxButton(this, ID_UPDATE_BTN, wxT("UPDATE"), wxPoint(30, 70), wxDefaultSize, 0);
     RemoveBtn = new wxButton(this, ID_REMOVE_BTN, wxT("REMOVE"), wxPoint(30, 100), wxDefaultSize, 0);
     OpenInBrowserBtn = new wxButton(this, ID_OPEN_IN_BROWSER_BTN, wxT("BROWSE"), wxPoint(30, 130), wxDefaultSize, 0);
+
+    ListaRotasMutex = new mutex();
+    //AtualizaVisualizacaoThread = new thread(UpdateRouteVisualizationTask, ref(*this));
+    AtualizaTelaTimer.Bind(wxEVT_TIMER, &MyFrame::AtualizaTelaEvent, this);
+    AtualizaTelaTimer.Start(INTERVALO_ATUALIZACAO_TELA);
 }
 
 void MyFrame :: AddBtnCallback(wxCommandEvent& event)
 {
-    ostringstream strBuff;
-    strBuff << "\nAdicionando rota - id: " << this->IdAtualRotas;
-    this->LogTxtCtrl->AppendText(strBuff.str());
-    this->Rotas->push_back(new Rota(this->IdAtualRotas++));
-    PushToRouteList();
+    // ADICIONA ROTA DIRETAMENTE AO ARRAY
+    // AtualizaTelaTimer.Stop();
+    // ostringstream strBuff;
+    // strBuff << "\nAdicionando rota - id: " << this->IdAtualRotas;
+    // this->LogTxtCtrl->AppendText(strBuff.str());
+    // Rotas->push_back(new Rota(this->IdAtualRotas++));
+    // AtualizaTelaTimer.Start(INTERVALO_ATUALIZACAO_TELA);
+    // //PushToRouteList();
+    // this->DeveAtualizarTela = true;
+
+    this->rotaForm = new RotaFormFrame(this->Rotas, &this->IdAtualRotas, &this->DeveAtualizarTela);
+    this->rotaForm->Show();
+}
+
+void MyFrame :: AtualizaTelaEvent(wxTimerEvent& event)
+{
+    if(this->DeveAtualizarTela)
+        this->PushToRouteList();
 }
 
 void MyFrame :: RemoveBtnCallback(wxCommandEvent& event)
@@ -135,11 +171,12 @@ void MyFrame :: RemoveBtnCallback(wxCommandEvent& event)
     for (int i = 0; i < numberOfSelections; i++)
     {
         ostringstream strBuff;
-        strBuff << "\nRemovendo rota " << this->Rotas->at(selectedIndexes[i])->GetId();
+        strBuff << "\nRemovendo rota " << Rotas->at(selectedIndexes[i])->GetId();
         this->LogTxtCtrl->AppendText(strBuff.str());
-        this->Rotas->erase(this->Rotas->begin() + (int)selectedIndexes[i]);
+        Rotas->erase(Rotas->begin() + (int)selectedIndexes[i]);
     }
-    this->PushToRouteList();
+    this->DeveAtualizarTela = true;
+    //this->PushToRouteList();
 }
 
 bool tonclose(bool flag, int data)
@@ -150,11 +187,7 @@ bool tonclose(bool flag, int data)
 
 void MyFrame :: BrowseBtnCallback(wxCommandEvent& event)
 {
-    this->Rotas->push_back(new Rota(this->IdAtualRotas++));
-    this->rotaForm = new RotaFormFrame(this->Rotas->at(this->Rotas->size() - 1), &tonclose);
-    this->rotaForm->Show();
 
-    //Bind(wxEVT_CLOSE_WINDOW, &MyFrame::OnCloseFormWindow, this);
 }
 
 void MyFrame :: OnCloseFormWindow(wxCloseEvent& event)
@@ -179,14 +212,33 @@ void MyFrame::OnHello(wxCommandEvent& event)
 
 void MyFrame :: PushToRouteList()
 {
-    wxString* stringData = new wxString[this->Rotas->size()];
-    for (int i = 0; i < this->Rotas->size(); i++)
+    wxString* stringData = new wxString[Rotas->size()];
+
+    // if(UltimasRotasRenderizadas == nullptr)
+    //     UltimasRotasRenderizadas = new vector<Rota*>();
+
+    // if(UltimasRotasRenderizadas->size() > 0)
+    // {
+    //     delete UltimasRotasRenderizadas;
+    //     UltimasRotasRenderizadas = new vector<Rota*>();
+    // }
+
+    for (int i = 0; i < Rotas->size(); i++)
     {
-        stringData[i] = this->Rotas->at(i)->toString();
+        // UltimasRotasRenderizadas->push_back(Rotas->at(i));
+        stringData[i] = Rotas->at(i)->toString();
     }
+
+    // cout << "Finalizado push para list - diff: " << this->DeveAtualizarTela() << endl;
     
     this->RouteListBox->Clear();
 
-    if(this->Rotas->size() > 0)
-        this->RouteListBox->InsertItems(this->Rotas->size(), stringData, 0);
+    if(Rotas->size() > 0) 
+    {
+        this->RouteListBox->InsertItems(Rotas->size(), stringData, 0);
+    }
+
+    this->DeveAtualizarTela = false;
 }
+
+// #endif

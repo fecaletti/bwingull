@@ -21,6 +21,11 @@ class Rota: public RegistroBase
         Rota(int id);
         string toString();
         vector<Ponto*>* Pontos;
+        bool operator!= (Rota& outraRota);
+        bool operator== (Rota& outraRota);
+        bool RemovePonto(int index);
+        void SetaDescricao(string descricao);
+        string GetDescricao();
 };
 
 #endif
