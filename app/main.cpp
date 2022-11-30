@@ -161,7 +161,7 @@ MyFrame::MyFrame()
       wxTE_RICH, wxDefaultValidator, wxTextCtrlNameStr);
     
     AddBtn = new wxButton(this, ID_ADD_BTN, wxT("Adicionar Rota"), wxPoint(30, 40), wxDefaultSize, 0);
-    UpdateBtn = new wxButton(this, ID_UPDATE_BTN, wxT("Atualizar Rota"), wxPoint(30, 70), wxDefaultSize, 0);
+    UpdateBtn = new wxButton(this, ID_UPDATE_BTN, wxT("Editar Rota"), wxPoint(30, 70), wxDefaultSize, 0);
     RemoveBtn = new wxButton(this, ID_REMOVE_BTN, wxT("Remover Rota"), wxPoint(30, 100), wxDefaultSize, 0);
     OpenInBrowserBtn = new wxButton(this, ID_OPEN_IN_BROWSER_BTN, wxT("Pesquisar Rota"), wxPoint(30, 130), wxDefaultSize, 0);
     ExportJsonBtn = new wxButton(this, ID_EXPORT_BTN, wxT("Exportar..."), wxPoint(30, 160), wxDefaultSize, 0);
