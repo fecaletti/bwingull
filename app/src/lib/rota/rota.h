@@ -29,6 +29,7 @@ class Rota: public RegistroBase
         void SetaDescricao(string descricao);
         string GetDescricao();
         json ToJson();
+        static Rota* FromJson(json entrada);
 };
 
 #endif

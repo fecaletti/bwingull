@@ -27,6 +27,7 @@ class Ponto : public RegistroBase
         int GetNumero();
         string ToString();
         json ToJson();
+        static Ponto* FromJson(json entrada);
 };
 
 #endif

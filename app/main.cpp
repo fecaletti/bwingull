@@ -5,8 +5,6 @@
 //Fernando Augusto Caletti de Barros
 //Leonardo
 //Vanderson
-// #ifndef MAIN_BWINGULL_CPP
-// #define MAIN_BWINGULL_CPP
 
 #include <wx/wxprec.h>
 #include <wx/wx.h>
@@ -16,6 +14,7 @@
 #include <stdio.h>
 #include <vector>
 #include <fstream>
+#include <string>
 
 #include "src/lib/rota/rota.h"
 #include "src/frames/rota-form-frame/rota-form-frame.cpp"
@@ -41,6 +40,7 @@ class MyFrame : public wxFrame
         void UpdateBtnCallback(wxCommandEvent& event);
         void BrowseBtnCallback(wxCommandEvent& event);
         void ExportBtnCallback(wxCommandEvent& event);
+        void ImportBtnCallback(wxCommandEvent& event);
         void PushToRouteList();
         void AtualizaTelaEvent(wxTimerEvent& event);
         mutex* ListaRotasMutex;
@@ -51,6 +51,7 @@ class MyFrame : public wxFrame
         DECLARE_EVENT_TABLE()
 
     private:
+        void Log(string data);
         void OnHello(wxCommandEvent& event);
         void OnExit(wxCommandEvent& event);
         void OnAbout(wxCommandEvent& event);
@@ -64,6 +65,7 @@ class MyFrame : public wxFrame
         wxButton *UpdateBtn;
         wxButton *OpenInBrowserBtn;
         wxButton *ExportJsonBtn;
+        wxButton *ImportJsonBtn;
 
         vector<Rota*>* UltimasRotasRenderizadas;
 
@@ -80,7 +82,8 @@ enum
     ID_OPEN_IN_BROWSER_BTN = 5,
     ID_LOG_TEXT_CONTROLLER = 6,
     ID_ROUTE_LIST_BOX = 7,
-    ID_EXPORT_BTN = 8
+    ID_EXPORT_BTN = 8,
+    ID_IMPORT_BTN = 9
 };
 
 // void UpdateRouteVisualizationTask(MyFrame& frameObject);
@@ -100,6 +103,7 @@ BEGIN_EVENT_TABLE ( MyFrame, wxFrame )
     EVT_BUTTON ( ID_UPDATE_BTN, MyFrame::UpdateBtnCallback ) // Tell the OS to run test method onclick btn 4
     EVT_BUTTON ( ID_OPEN_IN_BROWSER_BTN, MyFrame::BrowseBtnCallback ) // Tell the OS to run test method onclick btn 190
     EVT_BUTTON ( ID_EXPORT_BTN, MyFrame::ExportBtnCallback ) // Tell the OS to run test method onclick btn 190
+    EVT_BUTTON ( ID_IMPORT_BTN, MyFrame::ImportBtnCallback ) // Tell the OS to run test method onclick btn 190
 END_EVENT_TABLE() // The button is pressed
 
 
@@ -140,11 +144,12 @@ MyFrame::MyFrame()
       wxT(""), wxPoint(250, 220), wxSize(500, 200),
       wxTE_MULTILINE | wxTE_RICH | wxTE_READONLY, wxDefaultValidator, wxTextCtrlNameStr);
     
-    AddBtn = new wxButton(this, ID_ADD_BTN, wxT("ADD"), wxPoint(30, 40), wxDefaultSize, 0);
-    UpdateBtn = new wxButton(this, ID_UPDATE_BTN, wxT("UPDATE"), wxPoint(30, 70), wxDefaultSize, 0);
-    RemoveBtn = new wxButton(this, ID_REMOVE_BTN, wxT("REMOVE"), wxPoint(30, 100), wxDefaultSize, 0);
-    OpenInBrowserBtn = new wxButton(this, ID_OPEN_IN_BROWSER_BTN, wxT("BROWSE"), wxPoint(30, 130), wxDefaultSize, 0);
+    AddBtn = new wxButton(this, ID_ADD_BTN, wxT("Adicionar Rota"), wxPoint(30, 40), wxDefaultSize, 0);
+    UpdateBtn = new wxButton(this, ID_UPDATE_BTN, wxT("Atualizar Rota"), wxPoint(30, 70), wxDefaultSize, 0);
+    RemoveBtn = new wxButton(this, ID_REMOVE_BTN, wxT("Remover Rota"), wxPoint(30, 100), wxDefaultSize, 0);
+    OpenInBrowserBtn = new wxButton(this, ID_OPEN_IN_BROWSER_BTN, wxT("Pesquisar Rota"), wxPoint(30, 130), wxDefaultSize, 0);
     ExportJsonBtn = new wxButton(this, ID_EXPORT_BTN, wxT("Exportar..."), wxPoint(30, 160), wxDefaultSize, 0);
+    ImportJsonBtn = new wxButton(this, ID_IMPORT_BTN, wxT("Importar..."), wxPoint(30, 190), wxDefaultSize, 0);
 
     ListaRotasMutex = new mutex();
     //AtualizaVisualizacaoThread = new thread(UpdateRouteVisualizationTask, ref(*this));
@@ -152,7 +157,7 @@ MyFrame::MyFrame()
     AtualizaTelaTimer.Start(INTERVALO_ATUALIZACAO_TELA);
 }
 
-void MyFrame :: AddBtnCallback(wxCommandEvent& event)
+void MyFrame::AddBtnCallback(wxCommandEvent& event)
 {
     // ADICIONA ROTA DIRETAMENTE AO ARRAY
     // AtualizaTelaTimer.Stop();
@@ -171,13 +176,13 @@ void MyFrame :: AddBtnCallback(wxCommandEvent& event)
     this->rotaForm->Show();
 }
 
-void MyFrame :: AtualizaTelaEvent(wxTimerEvent& event)
+void MyFrame::AtualizaTelaEvent(wxTimerEvent& event)
 {
     if(this->DeveAtualizarTela)
         this->PushToRouteList();
 }
 
-void MyFrame :: RemoveBtnCallback(wxCommandEvent& event)
+void MyFrame::RemoveBtnCallback(wxCommandEvent& event)
 {
     wxArrayInt selectedIndexes;
     int numberOfSelections = this->RouteListBox->GetSelections(selectedIndexes);
@@ -192,7 +197,7 @@ void MyFrame :: RemoveBtnCallback(wxCommandEvent& event)
     //this->PushToRouteList();
 }
 
-void MyFrame :: UpdateBtnCallback(wxCommandEvent& event)
+void MyFrame::UpdateBtnCallback(wxCommandEvent& event)
 {
     // if(this->rotaForm != nullptr)
     //     delete this->rotaForm;
@@ -231,18 +236,56 @@ void MyFrame :: ExportBtnCallback(wxCommandEvent& event)
     this->LogTxtCtrl->AppendText(strBuff.str());
 }
 
+void MyFrame::ImportBtnCallback(wxCommandEvent& event)
+{
+    wxFileDialog openFileDialog(this, _("Open JSON file"), "", "", "*.json", wxFD_OPEN|wxFD_FILE_MUST_EXIST);
+
+    if (openFileDialog.ShowModal() == wxID_CANCEL)
+        return;     // the user changed idea...
+
+    cout << "Received path: " << openFileDialog.GetPath() << endl;
+    ifstream inFile(openFileDialog.GetPath());
+    json importedData = json::parse(inFile);
+
+    // ostringstream strBuff;
+    // strBuff << "\nImportado arquivo JSON!\n" << importedData.dump();
+    // this->LogTxtCtrl->AppendText(strBuff.str());
+    Log("Importando arquivo JSON!");
+    Log(importedData.dump());
+
+    vector<json> jRotas = importedData["Rotas"];
+    for(int i = 0; i < jRotas.size(); i++)
+    {
+        Rotas->push_back(Rota::FromJson(jRotas.at(i)));
+    }
+
+    Log("Rotas adicionadas a base de dados!");
+    DeveAtualizarTela = true;
+}
+
 bool tonclose(bool flag, int data)
 {
     cout << "teste binding external -- " << flag << " - " << data << endl;
     return true;
 }
 
-void MyFrame :: BrowseBtnCallback(wxCommandEvent& event)
+void MyFrame::BrowseBtnCallback(wxCommandEvent& event)
 {
     cout << "browse button!" << endl;
+    wxArrayInt selectedIndexes;
+    int numberOfSelections = this->RouteListBox->GetSelections(selectedIndexes);
+
+    if(numberOfSelections <= 0)
+        return;
+
+    Rota* alvo = Rotas->at(selectedIndexes[0]);
+
+    ostringstream comandoBusca;
+    comandoBusca << "open -a \"Google Chrome\" \"http://google.com/search?q=" << alvo->GetDescricao() << "\""; 
+    system(comandoBusca.str().c_str());
 }
 
-void MyFrame :: OnCloseFormWindow(wxCloseEvent& event)
+void MyFrame::OnCloseFormWindow(wxCloseEvent& event)
 {
     cout << "Closed route form!!" << endl;
 }
@@ -293,4 +336,9 @@ void MyFrame :: PushToRouteList()
     this->DeveAtualizarTela = false;
 }
 
-// #endif
+void MyFrame::Log(string data)
+{
+    ostringstream strBuff;
+    strBuff << "\n" << data;
+    this->LogTxtCtrl->AppendText(strBuff.str());
+}

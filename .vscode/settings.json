@@ -13,6 +13,8 @@
         "string": "cpp",
         "string_view": "cpp",
         "thread": "cpp",
-        "__mutex_base": "cpp"
+        "__mutex_base": "cpp",
+        "filesystem": "cpp",
+        "stdexcept": "cpp"
     }
 }

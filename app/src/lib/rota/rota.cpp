@@ -57,3 +57,17 @@ json Rota :: ToJson()
 
     return jBuff;
 }
+
+Rota* Rota :: FromJson(json input)
+{
+    Rota* novaRota = new Rota(input["Id"]);
+    novaRota->SetaDescricao(input["Descricao"]);
+
+    vector<json> jPontos = input["Pontos"];
+    for(int i = 0; i < jPontos.size(); i++)
+    {
+        novaRota->Pontos->push_back(Ponto::FromJson(jPontos.at(i)));
+    }
+
+    return novaRota;
+}

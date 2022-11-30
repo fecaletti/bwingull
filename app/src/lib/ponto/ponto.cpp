@@ -47,3 +47,9 @@ json Ponto :: ToJson()
 
     return jBuff;
 }
+
+Ponto* Ponto :: FromJson(json input)
+{
+    Ponto* novoPonto = new Ponto(input["Id"], input["Numero"], input["X"], input["Y"]);
+    return novoPonto;
+}
