@@ -40,3 +40,20 @@ string Rota :: GetDescricao()
 {
     return this->Descricao;
 }
+
+json Rota :: ToJson()
+{
+    vector<json>* jPontos = new vector<json>();
+    for(int i  = 0; i < this->Pontos->size(); i++)
+    {
+        jPontos->push_back(this->Pontos->at(i)->ToJson());
+    }
+
+    json jBuff = {
+        { "Id", this->id },
+        { "Descricao", this->Descricao },
+        { "Pontos", *jPontos }
+    };
+
+    return jBuff;
+}

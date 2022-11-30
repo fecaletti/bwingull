@@ -15,11 +15,14 @@
 
 #include <stdio.h>
 #include <vector>
+#include <fstream>
 
 #include "src/lib/rota/rota.h"
 #include "src/frames/rota-form-frame/rota-form-frame.cpp"
+#include "packages/nlohmann/json.hpp"
 
 using namespace std;
+using json = nlohmann::json;
 
 #define INTERVALO_ATUALIZACAO_TELA 300 //ms
 
@@ -37,6 +40,7 @@ class MyFrame : public wxFrame
         void RemoveBtnCallback(wxCommandEvent& event);
         void UpdateBtnCallback(wxCommandEvent& event);
         void BrowseBtnCallback(wxCommandEvent& event);
+        void ExportBtnCallback(wxCommandEvent& event);
         void PushToRouteList();
         void AtualizaTelaEvent(wxTimerEvent& event);
         mutex* ListaRotasMutex;
@@ -59,6 +63,7 @@ class MyFrame : public wxFrame
         wxButton *RemoveBtn;
         wxButton *UpdateBtn;
         wxButton *OpenInBrowserBtn;
+        wxButton *ExportJsonBtn;
 
         vector<Rota*>* UltimasRotasRenderizadas;
 
@@ -74,7 +79,8 @@ enum
     ID_UPDATE_BTN = 4,
     ID_OPEN_IN_BROWSER_BTN = 5,
     ID_LOG_TEXT_CONTROLLER = 6,
-    ID_ROUTE_LIST_BOX = 7
+    ID_ROUTE_LIST_BOX = 7,
+    ID_EXPORT_BTN = 8
 };
 
 // void UpdateRouteVisualizationTask(MyFrame& frameObject);
@@ -93,6 +99,7 @@ BEGIN_EVENT_TABLE ( MyFrame, wxFrame )
     EVT_BUTTON ( ID_REMOVE_BTN, MyFrame::RemoveBtnCallback ) // Tell the OS to run test method onclick btn 190
     EVT_BUTTON ( ID_UPDATE_BTN, MyFrame::UpdateBtnCallback ) // Tell the OS to run test method onclick btn 4
     EVT_BUTTON ( ID_OPEN_IN_BROWSER_BTN, MyFrame::BrowseBtnCallback ) // Tell the OS to run test method onclick btn 190
+    EVT_BUTTON ( ID_EXPORT_BTN, MyFrame::ExportBtnCallback ) // Tell the OS to run test method onclick btn 190
 END_EVENT_TABLE() // The button is pressed
 
 
@@ -102,7 +109,7 @@ void testeFunc()
 }
 
 MyFrame::MyFrame()
-    : wxFrame(nullptr, wxID_ANY, "Gerenciador de Rotas UERGS - POO 2022/2", wxDefaultPosition, wxSize(500, 500))
+    : wxFrame(nullptr, wxID_ANY, "Gerenciador de Rotas UERGS - POO 2022/2", wxDefaultPosition, wxSize(800, 500))
 {
     //Rotas = new vector<Rota*>();
 
@@ -127,16 +134,17 @@ MyFrame::MyFrame()
     Bind(wxEVT_MENU, &MyFrame::OnAbout, this, wxID_ABOUT);
     Bind(wxEVT_MENU, &MyFrame::OnExit, this, wxID_EXIT);
 
-    RouteListBox = new wxListBox(this, ID_ROUTE_LIST_BOX, wxPoint(250, 10), wxSize(240, 200));
+    RouteListBox = new wxListBox(this, ID_ROUTE_LIST_BOX, wxPoint(250, 10), wxSize(500, 200));
 
-        LogTxtCtrl = new wxTextCtrl(this, ID_LOG_TEXT_CONTROLLER,
-      wxT(""), wxPoint(250, 220), wxSize(240, 200),
+    LogTxtCtrl = new wxTextCtrl(this, ID_LOG_TEXT_CONTROLLER,
+      wxT(""), wxPoint(250, 220), wxSize(500, 200),
       wxTE_MULTILINE | wxTE_RICH | wxTE_READONLY, wxDefaultValidator, wxTextCtrlNameStr);
     
     AddBtn = new wxButton(this, ID_ADD_BTN, wxT("ADD"), wxPoint(30, 40), wxDefaultSize, 0);
     UpdateBtn = new wxButton(this, ID_UPDATE_BTN, wxT("UPDATE"), wxPoint(30, 70), wxDefaultSize, 0);
     RemoveBtn = new wxButton(this, ID_REMOVE_BTN, wxT("REMOVE"), wxPoint(30, 100), wxDefaultSize, 0);
     OpenInBrowserBtn = new wxButton(this, ID_OPEN_IN_BROWSER_BTN, wxT("BROWSE"), wxPoint(30, 130), wxDefaultSize, 0);
+    ExportJsonBtn = new wxButton(this, ID_EXPORT_BTN, wxT("Exportar..."), wxPoint(30, 160), wxDefaultSize, 0);
 
     ListaRotasMutex = new mutex();
     //AtualizaVisualizacaoThread = new thread(UpdateRouteVisualizationTask, ref(*this));
@@ -199,6 +207,28 @@ void MyFrame :: UpdateBtnCallback(wxCommandEvent& event)
     cout << "Rota encontrada. Iniciando form..." << endl;
     this->rotaForm = new RotaFormFrame(this->Rotas, rotaSelecionada, &this->DeveAtualizarTela);
     this->rotaForm->Show();
+}
+
+void MyFrame :: ExportBtnCallback(wxCommandEvent& event)
+{
+    vector<json>* jRotas = new vector<json>();
+    for(int i = 0; i < Rotas->size(); i++)
+    {
+        jRotas->push_back(Rotas->at(i)->ToJson());
+    }
+
+    json jBuff = {
+        { "Rotas", *jRotas }
+    };
+
+    string parsedJson = jBuff.dump();
+
+    ofstream outfile("rotas_bwingull.json");
+    outfile << parsedJson << endl;
+
+    ostringstream strBuff;
+    strBuff << "\nExportado arquivo JSON!";
+    this->LogTxtCtrl->AppendText(strBuff.str());
 }
 
 bool tonclose(bool flag, int data)

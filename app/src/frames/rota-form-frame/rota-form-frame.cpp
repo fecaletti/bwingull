@@ -59,7 +59,7 @@ class RotaFormFrame : public wxFrame
 
         vector<Rota*>* RotasDb;
         Rota* NovaRota;
-        int IdAtualPonto = 0;
+        int IdAtualPonto = 1;
         int* IdAtualRotas;
         bool* FlagAtualizaTela;
         bool ModoEdicao = false;
@@ -114,9 +114,17 @@ RotaFormFrame::RotaFormFrame(vector<Rota*>* rotasDB, Rota* rotaAlvo, bool* flagA
     {
         Ponto* pontoAtual = rotaAlvo->Pontos->at(i);
         this->NovaRota->Pontos->push_back(new Ponto(pontoAtual->GetId(), pontoAtual->GetNumero(), pontoAtual->GetX(), pontoAtual->GetY()));
+        if(pontoAtual->GetId() >= IdAtualPonto)
+            IdAtualPonto = pontoAtual->GetId() + 1;
     }
 
     this->NovaRota->SetaDescricao(rotaAlvo->GetDescricao());
+    // for(int i = 0; i < this->NovaRota->Pontos->size(); i++)
+    // {
+    //     Ponto* pontoAtual = this->NovaRota->Pontos->at(i);
+
+    // }
+
     ModoEdicao = true;
 
     SetupView();

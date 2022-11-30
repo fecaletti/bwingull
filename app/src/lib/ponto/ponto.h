@@ -7,8 +7,10 @@
 #include <sstream>
 
 #include "../registro-base/registro-base.h"
+#include "../../../packages/nlohmann/json.hpp"
 
 using namespace std;
+using json = nlohmann::json;
 
 class Ponto : public RegistroBase
 {
@@ -24,6 +26,7 @@ class Ponto : public RegistroBase
         double GetY();
         int GetNumero();
         string ToString();
+        json ToJson();
 };
 
 #endif

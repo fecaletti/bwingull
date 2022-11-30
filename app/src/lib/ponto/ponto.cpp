@@ -35,3 +35,15 @@ int Ponto :: GetNumero()
 {
     return this->numero;
 }
+
+json Ponto :: ToJson()
+{
+    json jBuff = {
+        { "Id", this->id },
+        { "Numero", this->numero },
+        { "X", this->x },
+        { "Y", this->y }
+    };
+
+    return jBuff;
+}

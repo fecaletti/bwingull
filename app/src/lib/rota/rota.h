@@ -3,6 +3,7 @@
 
 #include "../ponto/ponto.h"
 #include "../registro-base/registro-base.h"
+#include "../../../packages/nlohmann/json.hpp"
 #include <iostream>
 #include <sstream>
 #include <ostream>
@@ -11,6 +12,7 @@
 #include <string>
 
 using namespace std;
+using json = nlohmann::json;
 
 class Rota: public RegistroBase
 {
@@ -26,6 +28,7 @@ class Rota: public RegistroBase
         bool RemovePonto(int index);
         void SetaDescricao(string descricao);
         string GetDescricao();
+        json ToJson();
 };
 
 #endif
