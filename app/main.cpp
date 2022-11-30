@@ -15,6 +15,7 @@
 #include <vector>
 #include <fstream>
 #include <string>
+#include <regex>
 
 #include "src/lib/rota/rota.h"
 #include "src/frames/rota-form-frame/rota-form-frame.cpp"
@@ -41,10 +42,13 @@ class MyFrame : public wxFrame
         void BrowseBtnCallback(wxCommandEvent& event);
         void ExportBtnCallback(wxCommandEvent& event);
         void ImportBtnCallback(wxCommandEvent& event);
+        void ApplyFilterBtnCallback(wxCommandEvent& event);
+        void ClearFilterBtnCallback(wxCommandEvent& event);
         void PushToRouteList();
         void AtualizaTelaEvent(wxTimerEvent& event);
         mutex* ListaRotasMutex;
         vector<Rota*>* Rotas = new vector<Rota*>();
+        vector<Rota*>* RotasEmExibicao = Rotas;
         int IdAtualRotas = 1;
         bool DeveAtualizarTela = false;
 
@@ -59,6 +63,7 @@ class MyFrame : public wxFrame
         // void UpdateRouteVisualizationTask();
         
         wxTextCtrl *LogTxtCtrl;
+        wxTextCtrl *FilterTxtCtrl;
         wxListBox *RouteListBox;
         wxButton *AddBtn;
         wxButton *RemoveBtn;
@@ -66,6 +71,8 @@ class MyFrame : public wxFrame
         wxButton *OpenInBrowserBtn;
         wxButton *ExportJsonBtn;
         wxButton *ImportJsonBtn;
+        wxButton *ApplyFilterBtn;
+        wxButton *ClearFilterBtn;
 
         vector<Rota*>* UltimasRotasRenderizadas;
 
@@ -83,7 +90,10 @@ enum
     ID_LOG_TEXT_CONTROLLER = 6,
     ID_ROUTE_LIST_BOX = 7,
     ID_EXPORT_BTN = 8,
-    ID_IMPORT_BTN = 9
+    ID_IMPORT_BTN = 9,
+    ID_FILTER_TEXT_CONTROLLER = 10,
+    ID_APPLY_FILTER_BTN = 11,
+    ID_CLEAR_FILTER_BTN = 12
 };
 
 // void UpdateRouteVisualizationTask(MyFrame& frameObject);
@@ -104,6 +114,8 @@ BEGIN_EVENT_TABLE ( MyFrame, wxFrame )
     EVT_BUTTON ( ID_OPEN_IN_BROWSER_BTN, MyFrame::BrowseBtnCallback ) // Tell the OS to run test method onclick btn 190
     EVT_BUTTON ( ID_EXPORT_BTN, MyFrame::ExportBtnCallback ) // Tell the OS to run test method onclick btn 190
     EVT_BUTTON ( ID_IMPORT_BTN, MyFrame::ImportBtnCallback ) // Tell the OS to run test method onclick btn 190
+    EVT_BUTTON ( ID_APPLY_FILTER_BTN, MyFrame::ApplyFilterBtnCallback ) // Tell the OS to run test method onclick btn 190
+    EVT_BUTTON ( ID_CLEAR_FILTER_BTN, MyFrame::ClearFilterBtnCallback ) // Tell the OS to run test method onclick btn 190
 END_EVENT_TABLE() // The button is pressed
 
 
@@ -143,6 +155,10 @@ MyFrame::MyFrame()
     LogTxtCtrl = new wxTextCtrl(this, ID_LOG_TEXT_CONTROLLER,
       wxT(""), wxPoint(250, 220), wxSize(500, 200),
       wxTE_MULTILINE | wxTE_RICH | wxTE_READONLY, wxDefaultValidator, wxTextCtrlNameStr);
+
+    FilterTxtCtrl = new wxTextCtrl(this, ID_FILTER_TEXT_CONTROLLER,
+      wxT("Buscar... (descricao)"), wxPoint(30, 280), wxSize(197, 25),
+      wxTE_RICH, wxDefaultValidator, wxTextCtrlNameStr);
     
     AddBtn = new wxButton(this, ID_ADD_BTN, wxT("Adicionar Rota"), wxPoint(30, 40), wxDefaultSize, 0);
     UpdateBtn = new wxButton(this, ID_UPDATE_BTN, wxT("Atualizar Rota"), wxPoint(30, 70), wxDefaultSize, 0);
@@ -150,6 +166,8 @@ MyFrame::MyFrame()
     OpenInBrowserBtn = new wxButton(this, ID_OPEN_IN_BROWSER_BTN, wxT("Pesquisar Rota"), wxPoint(30, 130), wxDefaultSize, 0);
     ExportJsonBtn = new wxButton(this, ID_EXPORT_BTN, wxT("Exportar..."), wxPoint(30, 160), wxDefaultSize, 0);
     ImportJsonBtn = new wxButton(this, ID_IMPORT_BTN, wxT("Importar..."), wxPoint(30, 190), wxDefaultSize, 0);
+    ApplyFilterBtn = new wxButton(this, ID_APPLY_FILTER_BTN, wxT("Filtrar"), wxPoint(30, 310), wxDefaultSize, 0);
+    ClearFilterBtn = new wxButton(this, ID_CLEAR_FILTER_BTN, wxT("Limpar Filtro"), wxPoint(130, 310), wxDefaultSize, 0);
 
     ListaRotasMutex = new mutex();
     //AtualizaVisualizacaoThread = new thread(UpdateRouteVisualizationTask, ref(*this));
@@ -263,6 +281,46 @@ void MyFrame::ImportBtnCallback(wxCommandEvent& event)
     DeveAtualizarTela = true;
 }
 
+void MyFrame::ApplyFilterBtnCallback(wxCommandEvent& event)
+{
+    string rawFilter = FilterTxtCtrl->GetLineText(0).ToStdString();
+    regex exp(rawFilter);
+    // string adjustedFilter = "";
+    // for(int i = 0; i < rawFilter.length(); i++)
+    // {
+    //     if(rawFilter[i] != ' ')
+    //         adjustedFilter += rawFilter[i];
+    //     else
+    //     {
+    //         adjustedFilter
+    //     }
+    // }
+
+    vector<Rota*>* rotasFiltradas = new vector<Rota*>();
+    Log(rawFilter);
+
+    for (int i = 0; i < Rotas->size(); i++)
+    {
+        if(regex_search(Rotas->at(i)->GetDescricao(), exp))
+        {
+            cout << "Found!" << endl;
+            rotasFiltradas->push_back(Rotas->at(i));
+        }
+    }
+    RotasEmExibicao = rotasFiltradas;
+    DeveAtualizarTela = true;
+}
+
+void MyFrame::ClearFilterBtnCallback(wxCommandEvent& event)
+{
+    if(RotasEmExibicao == Rotas)
+        return;
+
+    delete RotasEmExibicao;
+    RotasEmExibicao = Rotas;
+    DeveAtualizarTela = true;
+}
+
 bool tonclose(bool flag, int data)
 {
     cout << "teste binding external -- " << flag << " - " << data << endl;
@@ -307,7 +365,7 @@ void MyFrame::OnHello(wxCommandEvent& event)
 
 void MyFrame :: PushToRouteList()
 {
-    wxString* stringData = new wxString[Rotas->size()];
+    wxString* stringData = new wxString[RotasEmExibicao->size()];
 
     // if(UltimasRotasRenderizadas == nullptr)
     //     UltimasRotasRenderizadas = new vector<Rota*>();
@@ -318,19 +376,19 @@ void MyFrame :: PushToRouteList()
     //     UltimasRotasRenderizadas = new vector<Rota*>();
     // }
 
-    for (int i = 0; i < Rotas->size(); i++)
+    for (int i = 0; i < RotasEmExibicao->size(); i++)
     {
         // UltimasRotasRenderizadas->push_back(Rotas->at(i));
-        stringData[i] = Rotas->at(i)->toString();
+        stringData[i] = RotasEmExibicao->at(i)->toString();
     }
 
     // cout << "Finalizado push para list - diff: " << this->DeveAtualizarTela() << endl;
     
     this->RouteListBox->Clear();
 
-    if(Rotas->size() > 0) 
+    if(RotasEmExibicao->size() > 0) 
     {
-        this->RouteListBox->InsertItems(Rotas->size(), stringData, 0);
+        this->RouteListBox->InsertItems(RotasEmExibicao->size(), stringData, 0);
     }
 
     this->DeveAtualizarTela = false;

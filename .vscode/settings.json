@@ -15,6 +15,7 @@
         "thread": "cpp",
         "__mutex_base": "cpp",
         "filesystem": "cpp",
-        "stdexcept": "cpp"
+        "stdexcept": "cpp",
+        "regex": "cpp"
     }
 }
