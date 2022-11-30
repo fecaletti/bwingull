@@ -109,14 +109,19 @@ RotaFormFrame::RotaFormFrame(vector<Rota*>* rotasDB, Rota* rotaAlvo, bool* flagA
     this->FlagAtualizaTela = flagAtualizaTela;
 
     this->NovaRota = new Rota(rotaAlvo->GetId());
+
     for(int i = 0; i < rotaAlvo->Pontos->size(); i++)
     {
         Ponto* pontoAtual = rotaAlvo->Pontos->at(i);
         this->NovaRota->Pontos->push_back(new Ponto(pontoAtual->GetId(), pontoAtual->GetNumero(), pontoAtual->GetX(), pontoAtual->GetY()));
     }
 
+    this->NovaRota->SetaDescricao(rotaAlvo->GetDescricao());
     ModoEdicao = true;
+
     SetupView();
+    ImprimirListaPontos();
+    this->RotaDescTxt->ChangeValue(wxString(this->NovaRota->GetDescricao()));
 }
 
 void RotaFormFrame :: SetupView()

@@ -35,6 +35,7 @@ class MyFrame : public wxFrame
         MyFrame();
         void AddBtnCallback(wxCommandEvent& event);
         void RemoveBtnCallback(wxCommandEvent& event);
+        void UpdateBtnCallback(wxCommandEvent& event);
         void BrowseBtnCallback(wxCommandEvent& event);
         void PushToRouteList();
         void AtualizaTelaEvent(wxTimerEvent& event);
@@ -90,6 +91,7 @@ bool MyApp::OnInit()
 BEGIN_EVENT_TABLE ( MyFrame, wxFrame )
     EVT_BUTTON ( ID_ADD_BTN, MyFrame::AddBtnCallback ) // Tell the OS to run test method onclick btn 189
     EVT_BUTTON ( ID_REMOVE_BTN, MyFrame::RemoveBtnCallback ) // Tell the OS to run test method onclick btn 190
+    EVT_BUTTON ( ID_UPDATE_BTN, MyFrame::UpdateBtnCallback ) // Tell the OS to run test method onclick btn 4
     EVT_BUTTON ( ID_OPEN_IN_BROWSER_BTN, MyFrame::BrowseBtnCallback ) // Tell the OS to run test method onclick btn 190
 END_EVENT_TABLE() // The button is pressed
 
@@ -154,6 +156,9 @@ void MyFrame :: AddBtnCallback(wxCommandEvent& event)
     // //PushToRouteList();
     // this->DeveAtualizarTela = true;
 
+    // if(this->rotaForm != nullptr)
+    //     delete this->rotaForm;
+
     this->rotaForm = new RotaFormFrame(this->Rotas, &this->IdAtualRotas, &this->DeveAtualizarTela);
     this->rotaForm->Show();
 }
@@ -179,6 +184,23 @@ void MyFrame :: RemoveBtnCallback(wxCommandEvent& event)
     //this->PushToRouteList();
 }
 
+void MyFrame :: UpdateBtnCallback(wxCommandEvent& event)
+{
+    // if(this->rotaForm != nullptr)
+    //     delete this->rotaForm;
+
+    wxArrayInt selectedIndexes;
+    int numberOfSelections = this->RouteListBox->GetSelections(selectedIndexes);
+    if(numberOfSelections <= 0)
+        return;
+
+    Rota* rotaSelecionada = this->Rotas->at(selectedIndexes[0]);
+    
+    cout << "Rota encontrada. Iniciando form..." << endl;
+    this->rotaForm = new RotaFormFrame(this->Rotas, rotaSelecionada, &this->DeveAtualizarTela);
+    this->rotaForm->Show();
+}
+
 bool tonclose(bool flag, int data)
 {
     cout << "teste binding external -- " << flag << " - " << data << endl;
@@ -187,7 +209,7 @@ bool tonclose(bool flag, int data)
 
 void MyFrame :: BrowseBtnCallback(wxCommandEvent& event)
 {
-
+    cout << "browse button!" << endl;
 }
 
 void MyFrame :: OnCloseFormWindow(wxCloseEvent& event)
