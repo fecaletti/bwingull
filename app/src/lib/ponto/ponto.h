@@ -7,12 +7,13 @@
 #include <sstream>
 
 #include "../registro-base/registro-base.h"
+#include "../stringavel/stringavel.h"
 #include "../../../packages/nlohmann/json.hpp"
 
 using namespace std;
 using json = nlohmann::json;
 
-class Ponto : public RegistroBase
+class Ponto : public RegistroBase, public Stringavel
 {
     private:
         double x;

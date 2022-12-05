@@ -24,7 +24,7 @@
 using namespace std;
 using json = nlohmann::json;
 
-#define INTERVALO_ATUALIZACAO_TELA 300 //ms
+#define INTERVALO_ATUALIZACAO_TELA_MS 300
 
 class MyApp : public wxApp
 {
@@ -60,7 +60,6 @@ class MyFrame : public wxFrame
         void OnExit(wxCommandEvent& event);
         void OnAbout(wxCommandEvent& event);
         void OnCloseFormWindow(wxCloseEvent& event);
-        // void UpdateRouteVisualizationTask();
         
         wxTextCtrl *LogTxtCtrl;
         wxTextCtrl *FilterTxtCtrl;
@@ -96,8 +95,6 @@ enum
     ID_CLEAR_FILTER_BTN = 12
 };
 
-// void UpdateRouteVisualizationTask(MyFrame& frameObject);
-
 wxIMPLEMENT_APP(MyApp);
 
 bool MyApp::OnInit()
@@ -108,27 +105,19 @@ bool MyApp::OnInit()
 }
 
 BEGIN_EVENT_TABLE ( MyFrame, wxFrame )
-    EVT_BUTTON ( ID_ADD_BTN, MyFrame::AddBtnCallback ) // Tell the OS to run test method onclick btn 189
-    EVT_BUTTON ( ID_REMOVE_BTN, MyFrame::RemoveBtnCallback ) // Tell the OS to run test method onclick btn 190
-    EVT_BUTTON ( ID_UPDATE_BTN, MyFrame::UpdateBtnCallback ) // Tell the OS to run test method onclick btn 4
-    EVT_BUTTON ( ID_OPEN_IN_BROWSER_BTN, MyFrame::BrowseBtnCallback ) // Tell the OS to run test method onclick btn 190
-    EVT_BUTTON ( ID_EXPORT_BTN, MyFrame::ExportBtnCallback ) // Tell the OS to run test method onclick btn 190
-    EVT_BUTTON ( ID_IMPORT_BTN, MyFrame::ImportBtnCallback ) // Tell the OS to run test method onclick btn 190
-    EVT_BUTTON ( ID_APPLY_FILTER_BTN, MyFrame::ApplyFilterBtnCallback ) // Tell the OS to run test method onclick btn 190
-    EVT_BUTTON ( ID_CLEAR_FILTER_BTN, MyFrame::ClearFilterBtnCallback ) // Tell the OS to run test method onclick btn 190
-END_EVENT_TABLE() // The button is pressed
-
-
-void testeFunc()
-{
-
-}
+    EVT_BUTTON ( ID_ADD_BTN, MyFrame::AddBtnCallback ) 
+    EVT_BUTTON ( ID_REMOVE_BTN, MyFrame::RemoveBtnCallback ) 
+    EVT_BUTTON ( ID_UPDATE_BTN, MyFrame::UpdateBtnCallback ) 
+    EVT_BUTTON ( ID_OPEN_IN_BROWSER_BTN, MyFrame::BrowseBtnCallback ) 
+    EVT_BUTTON ( ID_EXPORT_BTN, MyFrame::ExportBtnCallback ) 
+    EVT_BUTTON ( ID_IMPORT_BTN, MyFrame::ImportBtnCallback ) 
+    EVT_BUTTON ( ID_APPLY_FILTER_BTN, MyFrame::ApplyFilterBtnCallback ) 
+    EVT_BUTTON ( ID_CLEAR_FILTER_BTN, MyFrame::ClearFilterBtnCallback )
+END_EVENT_TABLE()
 
 MyFrame::MyFrame()
     : wxFrame(nullptr, wxID_ANY, "Gerenciador de Rotas UERGS - POO 2022/2", wxDefaultPosition, wxSize(800, 500))
 {
-    //Rotas = new vector<Rota*>();
-
     wxMenu *menuFile = new wxMenu();
     menuFile->Append(ID_Hello, "&Hello...\tCtrl-H", "Help string shown in status bar for this menu item");
     menuFile->AppendSeparator();
@@ -170,26 +159,12 @@ MyFrame::MyFrame()
     ClearFilterBtn = new wxButton(this, ID_CLEAR_FILTER_BTN, wxT("Limpar Filtro"), wxPoint(130, 310), wxDefaultSize, 0);
 
     ListaRotasMutex = new mutex();
-    //AtualizaVisualizacaoThread = new thread(UpdateRouteVisualizationTask, ref(*this));
     AtualizaTelaTimer.Bind(wxEVT_TIMER, &MyFrame::AtualizaTelaEvent, this);
-    AtualizaTelaTimer.Start(INTERVALO_ATUALIZACAO_TELA);
+    AtualizaTelaTimer.Start(INTERVALO_ATUALIZACAO_TELA_MS);
 }
 
 void MyFrame::AddBtnCallback(wxCommandEvent& event)
 {
-    // ADICIONA ROTA DIRETAMENTE AO ARRAY
-    // AtualizaTelaTimer.Stop();
-    // ostringstream strBuff;
-    // strBuff << "\nAdicionando rota - id: " << this->IdAtualRotas;
-    // this->LogTxtCtrl->AppendText(strBuff.str());
-    // Rotas->push_back(new Rota(this->IdAtualRotas++));
-    // AtualizaTelaTimer.Start(INTERVALO_ATUALIZACAO_TELA);
-    // //PushToRouteList();
-    // this->DeveAtualizarTela = true;
-
-    // if(this->rotaForm != nullptr)
-    //     delete this->rotaForm;
-
     this->rotaForm = new RotaFormFrame(this->Rotas, &this->IdAtualRotas, &this->DeveAtualizarTela);
     this->rotaForm->Show();
 }
@@ -212,14 +187,10 @@ void MyFrame::RemoveBtnCallback(wxCommandEvent& event)
         Rotas->erase(Rotas->begin() + (int)selectedIndexes[i]);
     }
     this->DeveAtualizarTela = true;
-    //this->PushToRouteList();
 }
 
 void MyFrame::UpdateBtnCallback(wxCommandEvent& event)
 {
-    // if(this->rotaForm != nullptr)
-    //     delete this->rotaForm;
-
     wxArrayInt selectedIndexes;
     int numberOfSelections = this->RouteListBox->GetSelections(selectedIndexes);
     if(numberOfSelections <= 0)
@@ -259,15 +230,12 @@ void MyFrame::ImportBtnCallback(wxCommandEvent& event)
     wxFileDialog openFileDialog(this, _("Open JSON file"), "", "", "*.json", wxFD_OPEN|wxFD_FILE_MUST_EXIST);
 
     if (openFileDialog.ShowModal() == wxID_CANCEL)
-        return;     // the user changed idea...
+        return;
 
     cout << "Received path: " << openFileDialog.GetPath() << endl;
     ifstream inFile(openFileDialog.GetPath());
     json importedData = json::parse(inFile);
 
-    // ostringstream strBuff;
-    // strBuff << "\nImportado arquivo JSON!\n" << importedData.dump();
-    // this->LogTxtCtrl->AppendText(strBuff.str());
     Log("Importando arquivo JSON!");
     Log(importedData.dump());
 
@@ -285,16 +253,6 @@ void MyFrame::ApplyFilterBtnCallback(wxCommandEvent& event)
 {
     string rawFilter = FilterTxtCtrl->GetLineText(0).ToStdString();
     regex exp(rawFilter);
-    // string adjustedFilter = "";
-    // for(int i = 0; i < rawFilter.length(); i++)
-    // {
-    //     if(rawFilter[i] != ' ')
-    //         adjustedFilter += rawFilter[i];
-    //     else
-    //     {
-    //         adjustedFilter
-    //     }
-    // }
 
     vector<Rota*>* rotasFiltradas = new vector<Rota*>();
     Log(rawFilter);
@@ -319,12 +277,6 @@ void MyFrame::ClearFilterBtnCallback(wxCommandEvent& event)
     delete RotasEmExibicao;
     RotasEmExibicao = Rotas;
     DeveAtualizarTela = true;
-}
-
-bool tonclose(bool flag, int data)
-{
-    cout << "teste binding external -- " << flag << " - " << data << endl;
-    return true;
 }
 
 void MyFrame::BrowseBtnCallback(wxCommandEvent& event)
@@ -357,7 +309,7 @@ void MyFrame::OnAbout(wxCommandEvent& event)
 {
     wxMessageBox("This is a wxWidgets Hello World example", "About Hello World", wxOK | wxICON_INFORMATION);
 }
- 
+
 void MyFrame::OnHello(wxCommandEvent& event)
 {
     wxLogMessage("Hello world from wxWidgets - teste!");
@@ -367,23 +319,11 @@ void MyFrame :: PushToRouteList()
 {
     wxString* stringData = new wxString[RotasEmExibicao->size()];
 
-    // if(UltimasRotasRenderizadas == nullptr)
-    //     UltimasRotasRenderizadas = new vector<Rota*>();
-
-    // if(UltimasRotasRenderizadas->size() > 0)
-    // {
-    //     delete UltimasRotasRenderizadas;
-    //     UltimasRotasRenderizadas = new vector<Rota*>();
-    // }
-
     for (int i = 0; i < RotasEmExibicao->size(); i++)
     {
-        // UltimasRotasRenderizadas->push_back(Rotas->at(i));
-        stringData[i] = RotasEmExibicao->at(i)->toString();
+        stringData[i] = RotasEmExibicao->at(i)->ToString();
     }
 
-    // cout << "Finalizado push para list - diff: " << this->DeveAtualizarTela() << endl;
-    
     this->RouteListBox->Clear();
 
     if(RotasEmExibicao->size() > 0) 

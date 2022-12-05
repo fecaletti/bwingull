@@ -5,7 +5,7 @@ Rota :: Rota(int id) : RegistroBase(id)
     this->Pontos = new vector<Ponto*>();
 }
 
-string Rota :: toString()
+string Rota :: ToString()
 {
     ostringstream strBuff;
     strBuff << "Rota " << this->id << ": " << this->Descricao << " - Pontos (QTD.): " << this->Pontos->size();

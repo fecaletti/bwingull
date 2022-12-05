@@ -3,6 +3,7 @@
 
 #include "../ponto/ponto.h"
 #include "../registro-base/registro-base.h"
+#include "../stringavel/stringavel.h"
 #include "../../../packages/nlohmann/json.hpp"
 #include <iostream>
 #include <sstream>
@@ -14,14 +15,14 @@
 using namespace std;
 using json = nlohmann::json;
 
-class Rota: public RegistroBase
+class Rota: public RegistroBase, public Stringavel
 {
     private:
         string Descricao;
 
     public:
         Rota(int id);
-        string toString();
+        string ToString();
         vector<Ponto*>* Pontos;
         bool operator!= (Rota& outraRota);
         bool operator== (Rota& outraRota);
