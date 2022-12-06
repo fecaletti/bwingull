@@ -27,8 +27,8 @@ using namespace std;
 class RotaFormFrame : public wxFrame
 {
     public:
-        RotaFormFrame(vector<Rota*>* rotasDB, int* idAtualRotas, bool* flagAtualizaTela);
-        RotaFormFrame(vector<Rota*>* rotasDB, Rota* rotaAlvo, bool* flagAtualizaTela);
+        RotaFormFrame(vector<Rota*>* rotasDB, int* idAtualRotas, bool* flagAtualizaTela, bool* formFinalizado);
+        RotaFormFrame(vector<Rota*>* rotasDB, Rota* rotaAlvo, bool* flagAtualizaTela, bool* formFinalizado);
         void AdicionaPontoBtnCallback(wxCommandEvent& event);
         void RemovePontoBtnCallback(wxCommandEvent& event);
         void SalvarBtnCallback(wxCommandEvent& event);
@@ -62,6 +62,7 @@ class RotaFormFrame : public wxFrame
         int IdAtualPonto = 1;
         int* IdAtualRotas;
         bool* FlagAtualizaTela;
+        bool* FormFinalizado;
         bool ModoEdicao = false;
 };
 
@@ -91,9 +92,10 @@ BEGIN_EVENT_TABLE ( RotaFormFrame, wxFrame )
 END_EVENT_TABLE()
 
 
-RotaFormFrame::RotaFormFrame(vector<Rota*>* rotasDB, int* idAtualRotas, bool* flagAtualizaTela)
+RotaFormFrame::RotaFormFrame(vector<Rota*>* rotasDB, int* idAtualRotas, bool* flagAtualizaTela, bool* formFinalizado)
     : wxFrame(nullptr, wxID_ANY, "Cadastro de nova rota", wxDefaultPosition, wxSize(500, 500))
 {
+    this->FormFinalizado = formFinalizado;
     this->RotasDb = rotasDB;
     this->IdAtualRotas = idAtualRotas;
     this->FlagAtualizaTela = flagAtualizaTela;
@@ -102,9 +104,10 @@ RotaFormFrame::RotaFormFrame(vector<Rota*>* rotasDB, int* idAtualRotas, bool* fl
     SetupView();
 }
 
-RotaFormFrame::RotaFormFrame(vector<Rota*>* rotasDB, Rota* rotaAlvo, bool* flagAtualizaTela)
+RotaFormFrame::RotaFormFrame(vector<Rota*>* rotasDB, Rota* rotaAlvo, bool* flagAtualizaTela, bool* formFinalizado)
     : wxFrame(nullptr, wxID_ANY, "Edição de rota", wxDefaultPosition, wxSize(500, 500))
 {
+    this->FormFinalizado = formFinalizado;
     this->RotasDb = rotasDB;
     this->FlagAtualizaTela = flagAtualizaTela;
 
@@ -119,12 +122,6 @@ RotaFormFrame::RotaFormFrame(vector<Rota*>* rotasDB, Rota* rotaAlvo, bool* flagA
     }
 
     this->NovaRota->SetaDescricao(rotaAlvo->GetDescricao());
-    // for(int i = 0; i < this->NovaRota->Pontos->size(); i++)
-    // {
-    //     Ponto* pontoAtual = this->NovaRota->Pontos->at(i);
-
-    // }
-
     ModoEdicao = true;
 
     SetupView();
@@ -238,6 +235,7 @@ void RotaFormFrame :: SalvarBtnCallback(wxCommandEvent& event)
     }
 
     (*FlagAtualizaTela) = true;
+    (*FormFinalizado) = true;
     this->Close();
 }
 
@@ -245,6 +243,7 @@ void RotaFormFrame :: CancelarBtnCallback(wxCommandEvent& event)
 {
     //delete this->NovaRota;
     (*FlagAtualizaTela) = false;
+    (*FormFinalizado) = true;
     this->Close();
 }
 
@@ -264,7 +263,7 @@ void RotaFormFrame :: OnHello(wxCommandEvent& event)
 
 void RotaFormFrame :: OnClose(wxCloseEvent& event)
 {
-    // this->Destroy();
+    *this->FormFinalizado = true;
 }
 
 int RotaFormFrame :: FindRotaById(int idAlvo)

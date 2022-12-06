@@ -15,7 +15,7 @@
 using namespace std;
 using json = nlohmann::json;
 
-class Rota: public RegistroBase, public Stringavel
+class Rota: public RegistroBase, public IStringavel
 {
     private:
         string Descricao;

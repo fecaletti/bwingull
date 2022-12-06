@@ -7,7 +7,7 @@
 
 using namespace std;
 
-class Stringavel
+class IStringavel
 {
     public:
         virtual string ToString() = 0;

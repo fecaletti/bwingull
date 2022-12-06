@@ -13,7 +13,7 @@
 using namespace std;
 using json = nlohmann::json;
 
-class Ponto : public RegistroBase, public Stringavel
+class Ponto : public RegistroBase, public IStringavel
 {
     private:
         double x;

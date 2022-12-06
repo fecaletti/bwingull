@@ -16,6 +16,7 @@
 #include <fstream>
 #include <string>
 #include <regex>
+#include <exception>
 
 #include "src/lib/rota/rota.h"
 #include "src/frames/rota-form-frame/rota-form-frame.cpp"
@@ -46,11 +47,11 @@ class MyFrame : public wxFrame
         void ClearFilterBtnCallback(wxCommandEvent& event);
         void PushToRouteList();
         void AtualizaTelaEvent(wxTimerEvent& event);
-        mutex* ListaRotasMutex;
         vector<Rota*>* Rotas = new vector<Rota*>();
         vector<Rota*>* RotasEmExibicao = Rotas;
         int IdAtualRotas = 1;
         bool DeveAtualizarTela = false;
+        bool FormCadastroFinalizado = false;
 
         DECLARE_EVENT_TABLE()
 
@@ -59,7 +60,6 @@ class MyFrame : public wxFrame
         void OnHello(wxCommandEvent& event);
         void OnExit(wxCommandEvent& event);
         void OnAbout(wxCommandEvent& event);
-        void OnCloseFormWindow(wxCloseEvent& event);
         
         wxTextCtrl *LogTxtCtrl;
         wxTextCtrl *FilterTxtCtrl;
@@ -73,9 +73,7 @@ class MyFrame : public wxFrame
         wxButton *ApplyFilterBtn;
         wxButton *ClearFilterBtn;
 
-        vector<Rota*>* UltimasRotasRenderizadas;
-
-        RotaFormFrame* rotaForm;
+        RotaFormFrame* rotaForm = 0;
         wxTimer AtualizaTelaTimer;
 };
 
@@ -92,7 +90,8 @@ enum
     ID_IMPORT_BTN = 9,
     ID_FILTER_TEXT_CONTROLLER = 10,
     ID_APPLY_FILTER_BTN = 11,
-    ID_CLEAR_FILTER_BTN = 12
+    ID_CLEAR_FILTER_BTN = 12,
+    ID_WARNING_MODAL = 13
 };
 
 wxIMPLEMENT_APP(MyApp);
@@ -158,21 +157,42 @@ MyFrame::MyFrame()
     ApplyFilterBtn = new wxButton(this, ID_APPLY_FILTER_BTN, wxT("Filtrar"), wxPoint(30, 310), wxDefaultSize, 0);
     ClearFilterBtn = new wxButton(this, ID_CLEAR_FILTER_BTN, wxT("Limpar Filtro"), wxPoint(130, 310), wxDefaultSize, 0);
 
-    ListaRotasMutex = new mutex();
     AtualizaTelaTimer.Bind(wxEVT_TIMER, &MyFrame::AtualizaTelaEvent, this);
     AtualizaTelaTimer.Start(INTERVALO_ATUALIZACAO_TELA_MS);
 }
 
 void MyFrame::AddBtnCallback(wxCommandEvent& event)
 {
-    this->rotaForm = new RotaFormFrame(this->Rotas, &this->IdAtualRotas, &this->DeveAtualizarTela);
-    this->rotaForm->Show();
+    try
+    {
+        if(this->rotaForm != 0)
+            throw 500;
+
+        this->rotaForm = new RotaFormFrame(this->Rotas, &this->IdAtualRotas, &this->DeveAtualizarTela, &this->FormCadastroFinalizado);
+        this->rotaForm->Show();
+    }
+    catch(int ex)
+    {
+        if(ex == 500)
+        {
+            cout << "O usuario precisa concluir o cadastro atual para iniciar outro." << endl;
+            wxDialog* dialog = new wxDialog(this, ID_WARNING_MODAL, wxString("AVISO"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE, wxString("TESTE"));
+            dialog->CreateTextSizer(wxString("\tÉ necessário concluir o cadastro atual para iniciar outro..."));
+            dialog->ShowModal();
+        }
+    }
 }
 
 void MyFrame::AtualizaTelaEvent(wxTimerEvent& event)
 {
     if(this->DeveAtualizarTela)
         this->PushToRouteList();
+
+    if(this->FormCadastroFinalizado)
+    {
+        this->rotaForm = 0;
+        this->FormCadastroFinalizado = false;
+    }
 }
 
 void MyFrame::RemoveBtnCallback(wxCommandEvent& event)
@@ -199,7 +219,7 @@ void MyFrame::UpdateBtnCallback(wxCommandEvent& event)
     Rota* rotaSelecionada = this->Rotas->at(selectedIndexes[0]);
     
     cout << "Rota encontrada. Iniciando form..." << endl;
-    this->rotaForm = new RotaFormFrame(this->Rotas, rotaSelecionada, &this->DeveAtualizarTela);
+    this->rotaForm = new RotaFormFrame(this->Rotas, rotaSelecionada, &this->DeveAtualizarTela, &this->FormCadastroFinalizado);
     this->rotaForm->Show();
 }
 
@@ -293,11 +313,6 @@ void MyFrame::BrowseBtnCallback(wxCommandEvent& event)
     ostringstream comandoBusca;
     comandoBusca << "open -a \"Google Chrome\" \"http://google.com/search?q=" << alvo->GetDescricao() << "\""; 
     system(comandoBusca.str().c_str());
-}
-
-void MyFrame::OnCloseFormWindow(wxCloseEvent& event)
-{
-    cout << "Closed route form!!" << endl;
 }
 
 void MyFrame::OnExit(wxCommandEvent& event)
